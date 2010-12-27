@@ -35,7 +35,7 @@ module IRC
 
 			if @config.ssl
 				#I once had a really nasty error-msg, so this should help.
-				require 'openssl' rescue raise "Cannot load openssl-library" 
+				require 'openssl' rescue raise "Cannot load openssl-library (libssl-dev)." 
 
 				context = OpenSSL::SSL::SSLContext.new
 				context.verify_mode = OpenSSL::SSL::VERIFY_NONE
