@@ -51,6 +51,13 @@ module IRC
 			else
 				params = match[2].split
 			end
+			prefix, command = match[0, 2]
+			
+			if command == "PING"
+				send "PONG #{params[0]}"
+			else
+				dispatch command, params, prefix
+			end
 		end
 	end
 end
