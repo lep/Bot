@@ -45,6 +45,12 @@ module IRC
 
 		def parse line
 			match = /(?:^:(\S+) )(\S+) (.+)/.match line
+			if match[2] =~ /:/
+				params = $~.pre_match.split
+				params << ":" + $~.post_match
+			else
+				params = match[2].split
+			end
 		end
 	end
 end
