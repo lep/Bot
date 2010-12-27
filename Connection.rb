@@ -34,9 +34,7 @@ module IRC
 			socket = TCPSocket.open(@config[:server], @config[:port])
 
 			if @config.ssl
-				begin require 'openssl' 
-				rescue raise "Cannot load openssl-library" 
-				end
+				require 'openssl' rescue raise "Cannot load openssl-library" 
 
 				context = OpenSSL::SSL::SSLContext.new
 				context.verify_mode = OpenSSL::SSL::VERIFY_NONE
