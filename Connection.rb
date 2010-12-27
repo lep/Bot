@@ -14,6 +14,14 @@ module IRC
 			listen
 		end
 
+		def send msg
+			if msg.length > 510
+				raise "Message too long."
+			end
+			@socket.puts msg + "\r\n"
+		end
+
+
 		private
 
 		def connect
