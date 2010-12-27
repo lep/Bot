@@ -10,6 +10,8 @@ module IRC
 			opts[:nick] = nick
 			@option=opts
 
+			@callbacks = Hash.new []
+
 			connect
 			listen
 		end
@@ -19,6 +21,10 @@ module IRC
 				raise "Message too long."
 			end
 			@socket.puts msg + "\r\n"
+		end
+
+		def on command, &callback
+			@callbacks[command] << callback
 		end
 
 
@@ -65,6 +71,12 @@ module IRC
 				send "PONG #{params[0]}"
 			else
 				dispatch command, params, prefix
+			end
+		end
+
+		def dispatch command, params, prefix
+			if @callbacks[command]
+				@callbacks[command].call(params, prefix)
 			end
 		end
 	end
