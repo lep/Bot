@@ -46,6 +46,14 @@ module IRC
 			end
 
 			@socket = socket
+
+			connect_irc
+		end
+
+		def connect_irc
+			send "PASS #{@options[:password]}" if @options[:password]
+			send "NICK :#{@options[:nick]}"
+			send "USER #{@options[:name]} 0 * :#{@options[:nick]}"
 		end
 
 		def listen
