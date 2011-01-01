@@ -82,8 +82,8 @@ module IRC
 		end
 
 		def dispatch command, params, prefix
-			if @callbacks[command]
-				@callbacks[command].call(params, prefix)
+			@callbacks[command].each do |cb|
+				cb.call(params, prefix)
 			end
 		end
 	end
