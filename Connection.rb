@@ -61,7 +61,7 @@ module IRC
 				while line = @socket.gets
 					parse line
 				end
-			end
+			end.join
 		end
 
 		def parse line
