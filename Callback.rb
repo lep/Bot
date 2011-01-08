@@ -2,7 +2,7 @@
 
 module IRC
 	
-	class SimpleDispatch
+	class SimpleCallback
 		
 		def initialize *, &callback
 			@callback = callback
@@ -21,7 +21,7 @@ module IRC
 
 	end
 
-	class ChannelMessageDispatch
+	class ChannelMessageCallback
 		def initialize channel=nil, filter=nil, *, &callback
 			@type = type
 			if channel.is_a? Symbol
@@ -51,7 +51,7 @@ module IRC
 				#message not in @channel
 				return
 			end
-			if @filter and matchdata = @filter.match params[1]
+			if @filter and matchdata = @filter.match(params[1])
 				if @channel 
 					#|user, message, matchdata| since the user
 					#allready knows the channel
@@ -71,7 +71,7 @@ module IRC
 		end
 	end
 
-	class PrivateMessageDispatch
+	class PrivateMessageCallback
 		#takes |user, message (, matchdata)|
 		def initialize filter=nil, *, &callback
 			@filter = filter
@@ -80,7 +80,7 @@ module IRC
 
 		def call prefix, *params
 			if @filter!=nil
-				if matchdata = @filter.match params[1]
+				if matchdata = @filter.match(params[1])
 					@callback.call prefix, params[1], matchdata
 				end
 			else
