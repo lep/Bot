@@ -23,7 +23,6 @@ module IRC
 
 	class ChannelMessageCallback
 		def initialize channel=nil, filter=nil, *, &callback
-			@type = type
 			if channel.is_a? Symbol
 				if not filter.is_a? Regexp or filter==nil
 					raise "Channel and Filter can't both be strings/symbols"

@@ -8,8 +8,8 @@ module IRC
 			@queue = []
 		end
 
-		def << *params
-			@queue << *params
+		def << params
+			@queue << params
 		end
 
 		def lock

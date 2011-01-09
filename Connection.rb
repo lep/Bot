@@ -1,10 +1,13 @@
 #!/usr/bin/env ruby
 
+require 'thread'
 require 'socket'
 require 'Queue'
 
 module IRC
 	class Connection
+		@@threads = []
+
 		def initialize server, nick, opts={}
 			opts[:port] ||= 6667
 			opts[:server] = server
@@ -14,22 +17,21 @@ module IRC
 
 			@callbacks = Hash.new []
 			@queue = IRC::Queue.new
+			@queue.lock
 
 			@ready = []
-
 			connect
 			connect_irc
 			listen
-			@queue.lock
 		end
 
 		def send msg
 			if msg.length > 510 #512 - "\r\n".length
 				raise "Message too long."
 			end
+			#puts "#{msg}"
 			@queue << msg
 			try_to_send
-			#@socket.puts msg + "\r\n"
 		end
 
 		def on command, &callback
@@ -39,20 +41,17 @@ module IRC
 
 		private
 
-		def try_to_send
-			loop do
-				if @queue.empty? || @queue.locked?
-					break
-				else
-					#TODO flood protection. see RFC 2813 section 5.8
-					@socket.puts @queue.remove + "\r\n"
-				end
-			end
+		def _send msg
+			@socket.puts msg + "\r\n"
 		end
 
-		def ping
-			@socket.puts "PING :#{@config[:server]}\r\n"
-			@queue.lock
+		def try_to_send
+			while not @queue.empty?
+				break if @queue.locked?
+					#TODO flood protection. see RFC 2813 section 5.8
+				puts ">> #{@queue.first}"
+				_send @queue.remove + "\r\n"
+			end
 		end
 
 		def connect
@@ -74,18 +73,18 @@ module IRC
 		end
 
 		def connect_irc
-			send "PASS #{@config[:password]}" if @config[:password]
-			send "NICK :#{@config[:nick]}"
-			send "USER #{@config[:name]} 0 * :#{@config[:nick]}"
+			_send "PASS #{@config[:password]}" if @config[:password]
+			_send "NICK :#{@config[:nick]}"
+			_send "USER #{@config[:name]} 0 * :#{@config[:nick]}"
 		end
 
 		def listen
-			Thread.new do
+			@@threads << Thread.new do
 				while line = @socket.gets
-					puts "<< #{line}"
+					#puts "<< #{line}"
 					parse line
 				end
-			end.join
+			end
 		end
 
 		def parse line
@@ -99,14 +98,14 @@ module IRC
 			prefix, command = m[1, 2]
 			
 			if command == "PING"
-				send "PONG #{params[0]}"
-				@queue.unlock
+				_send "PONG #{params[0]}"
+				#@queue.unlock
 			elsif command == "PONG"
-				@queue.unlock
+				#@queue.unlock
 			elsif ('001' .. '004').include? command
 				if ready? command
 					@queue.unlock
-					try_to_send
+					puts "READY"
 				end
 			else
 				dispatch command, params, prefix

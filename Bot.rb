@@ -29,6 +29,7 @@ module IRC
 		end
 		
 		def join channel, password=nil
+			puts "JOINING"
 			@connection.send "JOIN #{channel} #{password}".strip
 		end
 		
