@@ -33,7 +33,9 @@ module IRC
 		end
 
 		def remove
-			@queue.shift
+			unless locked?
+				@queue.shift
+			end
 		end
 	end
 end

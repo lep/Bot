@@ -15,6 +15,8 @@ module IRC
 			@callbacks = Hash.new []
 			@queue = IRC::Queue.new
 
+			@ready = []
+
 			connect
 			connect_irc
 			listen
@@ -22,7 +24,7 @@ module IRC
 		end
 
 		def send msg
-			if msg.length > 510
+			if msg.length > 510 #512 - "\r\n".length
 				raise "Message too long."
 			end
 			@queue << msg
@@ -42,10 +44,15 @@ module IRC
 				if @queue.empty? || @queue.locked?
 					break
 				else
-					#TODO add flood-check
+					#TODO flood protection. see RFC 2813 section 5.8
 					@socket.puts @queue.remove + "\r\n"
 				end
 			end
+		end
+
+		def ping
+			@socket.puts "PING :#{@config[:server]}\r\n"
+			@queue.lock
 		end
 
 		def connect
@@ -93,8 +100,14 @@ module IRC
 			
 			if command == "PING"
 				send "PONG #{params[0]}"
+				@queue.unlock
+			elsif command == "PONG"
+				@queue.unlock
 			elsif ('001' .. '004').include? command
-				#TODO ...
+				if ready? command
+					@queue.unlock
+					try_to_send
+				end
 			else
 				dispatch command, params, prefix
 			end
@@ -104,6 +117,11 @@ module IRC
 			@callbacks[command].each do |cb|
 				cb.call(params, prefix)
 			end
+		end
+
+		def ready? command
+			@ready << command
+			(('001' .. '004').to_a - @ready).empty?
 		end
 	end
 end
